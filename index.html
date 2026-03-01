@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a2b3c">
+    
+    <title>🚗 AutoTrack</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://cars-b0e4e-default-rtdb.asia-southeast1.firebasedatabase.app">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 12px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .app {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .loader {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+            font-size: 16px;
+        }
+        
+        .loader::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 20px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .content { 
+            padding: 20px; 
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .cars-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .car-card {
+            background: white;
+            border-radius: 24px;
+            padding: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .car-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(145deg, #f8faff, #f0f4ff);
+        }
+        
+        .car-info {
+            flex: 1;
+        }
+        
+        .car-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .car-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a2b3c;
+        }
+        
+        .car-total {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .plate-container {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border: 2px solid #1e293b;
+            border-radius: 6px;
+            padding: 4px 8px;
+            margin: 6px 0 6px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            width: fit-content;
+        }
+        
+        .plate-main {
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: #1e293b;
+        }
+        
+        .plate-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            border-left: 2px solid #1e293b;
+            padding-left: 8px;
+        }
+        
+        .plate-region {
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .plate-country {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .russian-flag {
+            display: flex;
+            flex-direction: column;
+            width: 20px;
+            height: 15px;
+            border: 1px solid #1e293b;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .flag-white { flex: 1; background: white; }
+        .flag-blue { flex: 1; background: #0039a6; }
+        .flag-red { flex: 1; background: #d52b1e; }
+        
+        .country-code {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .vin-container {
+            margin: 4px 0 6px 0;
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .vin-label {
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+        
+        .vin-value {
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        
+        .car-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        
+        .car-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 90px;
+        }
+        
+        .chart-container {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        
+        .chart-circle-bg {
+            stroke: #e2e8f0;
+            stroke-width: 8;
+            fill: none;
+        }
+        
+        .chart-circle {
+            stroke-width: 8;
+            fill: none;
+            stroke-linecap: round;
+            transition: stroke-dasharray 0.3s ease;
+        }
+        
+        .chart-circle.fuel { stroke: #48bb78; }
+        .chart-circle.service { stroke: #f6ad55; }
+        .chart-circle.wash { stroke: #4299e1; }
+        .chart-circle.other { stroke: #9f7aea; }
+        
+        .chart-legend {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 4px;
+            margin-top: 6px;
+            width: 100%;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 8px;
+            font-weight: 600;
+        }
+        
+        .legend-color {
+            width: 6px;
+            height: 6px;
+            border-radius: 3px;
+        }
+        
+        .legend-color.fuel { background: #48bb78; }
+        .legend-color.service { background: #f6ad55; }
+        .legend-color.wash { background: #4299e1; }
+        .legend-color.other { background: #9f7aea; }
+        
+        .legend-text {
+            color: #64748b;
+        }
+        
+        .chart-edit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 9px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        
+        .modal.active { 
+            display: flex; 
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 28px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .modal-form-row { margin-bottom: 12px; }
+        
+        .modal-form-row label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        
+        .modal-form-row input,
+        .modal-form-row select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            -webkit-appearance: none;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .modal-buttons button.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .modal-buttons button.delete {
+            background: #f87171;
+            color: white;
+        }
+        
+        .form-section {
+            background: linear-gradient(145deg, #ffffff, #f8fafc);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .form-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: #1a2b3c;
+        }
+        
+        .form-row { margin-bottom: 12px; }
+        
+        .form-row label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 4px;
+        }
+        
+        .form-row input,
+        .form-row select,
+        .form-row textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            background: white;
+            -webkit-appearance: none;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .button-group button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .button-group button.primary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+        }
+        
+        .active-car-badge {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            color: #667eea;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .operations-section {
+            margin-top: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .section-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a2b3c;
+        }
+        
+        .stats-badge {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            color: #667eea;
+            padding: 3px 8px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 6px;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 10px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 30px;
+            font-size: 13px;
+            background: white;
+            margin-bottom: 12px;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 12px;
+        }
+        
+        .operations-list {
+            background: white;
+            border-radius: 20px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+        }
+        
+        .operation-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .operation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .operation-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .operation-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        
+        .operation-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .operation-date {
+            font-size: 11px;
+            color: #64748b;
+        }
+        
+        .operation-desc {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 13px;
+        }
+        
+        .operation-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .operation-amount {
+            font-weight: 700;
+            color: #2d3748;
+            font-size: 14px;
+        }
+        
+        .operation-car {
+            font-size: 11px;
+            color: #667eea;
+            font-weight: 600;
+            background: #f0f4ff;
+            padding: 3px 6px;
+            border-radius: 16px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 8px;
+        }
+        
+        .expand-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .expand-btn .arrow {
+            transition: transform 0.3s ease;
+        }
+        
+        .expand-btn.expanded .arrow {
+            transform: rotate(180deg);
+        }
+        
+        .operations-full {
+            display: none;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .operations-full.show {
+            display: block;
+        }
+        
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+            color: #94a3b8;
+        }
+        
+        @media (max-width: 380px) {
+            .car-card {
+                padding: 12px;
+                gap: 8px;
+            }
+            
+            .plate-main {
+                font-size: 18px;
+            }
+            
+            .plate-region {
+                font-size: 14px;
+            }
+            
+            .chart-container {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .operation-amount {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <h1>🚗 AutoTrack</h1>
+    </div>
+    
+    <div class="content" id="content">
+        <div class="loader">Загрузка данных</div>
+    </div>
+</div>
+
+<!-- Модальные окна (скрыты изначально) -->
+<div id="stsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-title">📋 Редактировать СТС</div>
+        <div class="modal-form-row">
+            <label>Автомобиль</label>
+            <select id="modalCarSelect">
+                <option value="priora">Лада Приора</option>
+                <option value="rio">Kia Rio</option>
+            </select>
+        </div>
+        <div class="modal-form-row">
+            <label>Госномер</label>
+            <input type="text" id="inputPlateMain" placeholder="C065MK" maxlength="6">
+        </div>
+        <div class="modal-form-row">
+            <label>Код региона</label>
+            <input type="text" id="inputPlateRegion" placeholder="78" maxlength="3">
+        </div>
+        <div class="modal-form-row">
+            <label>VIN номер</label>
+            <input type="text" id="inputVin" placeholder="XTAGFL3308Y123456" maxlength="17">
+        </div>
+        <div class="modal-buttons">
+            <button onclick="saveSTS()" class="primary">Сохранить</button>
+            <button onclick="closeSTSModal()">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="editExpenseModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-title">✏️ Редактировать</div>
+        <div class="modal-form-row">
+            <label>Автомобиль</label>
+            <select id="editCarSelect">
+                <option value="priora">Лада Приора</option>
+                <option value="rio">Kia Rio</option>
+            </select>
+        </div>
+        <div class="modal-form-row">
+            <label>Тип</label>
+            <select id="editTypeSelect">
+                <option value="fuel">⛽ Заправка</option>
+                <option value="service">🔧 ТО</option>
+                <option value="wash">🧼 Мойка</option>
+                <option value="other">📦 Прочее</option>
+            </select>
+        </div>
+        <div class="modal-form-row">
+            <label>Дата</label>
+            <input type="date" id="editDateInput">
+        </div>
+        <div class="modal-form-row">
+            <label>Сумма (₽)</label>
+            <input type="number" id="editAmountInput" placeholder="0">
+        </div>
+        <div class="modal-form-row">
+            <label>Описание</label>
+            <textarea id="editDescInput" rows="2" placeholder="Описание"></textarea>
+        </div>
+        <div class="modal-form-row">
+            <label>Пробег (км)</label>
+            <input type="number" id="editMileageInput" placeholder="0">
+        </div>
+        <div class="modal-buttons">
+            <button onclick="saveEditedExpense()" class="primary">💾 Сохранить</button>
+            <button onclick="closeEditModal()">Отмена</button>
+            <button onclick="deleteCurrentExpense()" class="delete">🗑 Удалить</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Firebase config
+    const firebaseConfig = {
+        apiKey: "AIzaSyDBTx6JbOmniZpb5dUiHusrPGnZMz5CZlY",
+        authDomain: "cars-b0e4e.firebaseapp.com",
+        databaseURL: "https://cars-b0e4e-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "cars-b0e4e",
+        storageBucket: "cars-b0e4e.firebasestorage.app",
+        messagingSenderId: "357319051116",
+        appId: "1:357319051116:web:fcd8493b61bc316f6b9549"
+    };
+
+    // Инициализация
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const expensesRef = database.ref('expenses');
+    const carsRef = database.ref('cars');
+
+    // Глобальные переменные
+    let expenses = [];
+    let carsData = {};
+    let selectedCar = 'priora';
+    let currentEditId = null;
+    let isFullListVisible = false;
+
+    // Функция обновления диаграммы
+    function updateChart(carId, counts) {
+        const total = counts.fuel + counts.service + counts.wash + counts.other;
+        const circumference = 2 * Math.PI * 16;
+        
+        if (total === 0) {
+            const types = ['fuel', 'service', 'wash', 'other'];
+            types.forEach(type => {
+                const el = document.getElementById(`${carId}Chart${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                if (el) el.setAttribute('stroke-dasharray', `0 ${circumference}`);
+            });
+            return;
+        }
+        
+        let offset = 0;
+        const types = ['fuel', 'service', 'wash', 'other'];
+        
+        types.forEach(type => {
+            const percentage = counts[type] / total;
+            const dashLength = percentage * circumference;
+            const el = document.getElementById(`${carId}Chart${type.charAt(0).toUpperCase() + type.slice(1)}`);
+            if (el) {
+                el.setAttribute('stroke-dasharray', `${dashLength} ${circumference - dashLength}`);
+                el.setAttribute('stroke-dashoffset', -offset);
+            }
+            offset += dashLength;
+        });
+    }
+
+    // Выбор авто
+    window.selectCar = function(carId) {
+        selectedCar = carId;
+        document.getElementById('carPriora')?.classList.remove('selected');
+        document.getElementById('carRio')?.classList.remove('selected');
+        
+        if (carId === 'priora') {
+            document.getElementById('carPriora')?.classList.add('selected');
+            document.getElementById('activeCarBadge').textContent = 'Лада Приора';
+        } else {
+            document.getElementById('carRio')?.classList.add('selected');
+            document.getElementById('activeCarBadge').textContent = 'Kia Rio';
+        }
+    };
+
+    // Модальные окна СТС
+    window.openSTSModalForCar = function(carId) {
+        document.getElementById('modalCarSelect').value = carId;
+        const car = carsData[carId] || {};
+        document.getElementById('inputPlateMain').value = car.plateMain || '';
+        document.getElementById('inputPlateRegion').value = car.plateRegion || '';
+        document.getElementById('inputVin').value = car.vin || '';
+        document.getElementById('stsModal').classList.add('active');
+    };
+
+    window.closeSTSModal = function() {
+        document.getElementById('stsModal').classList.remove('active');
+    };
+
+    window.saveSTS = function() {
+        const carId = document.getElementById('modalCarSelect').value;
+        const carData = {
+            plateMain: document.getElementById('inputPlateMain').value,
+            plateRegion: document.getElementById('inputPlateRegion').value,
+            vin: document.getElementById('inputVin').value
+        };
+        carsRef.child(carId).set(carData);
+        carsData[carId] = carData;
+        updateUI();
+        closeSTSModal();
+    };
+
+    // Редактирование операций
+    window.openEditModal = function(id) {
+        const expense = expenses.find(e => e.id === id);
+        if (!expense) return;
+        currentEditId = id;
+        document.getElementById('editCarSelect').value = expense.car_id;
+        document.getElementById('editTypeSelect').value = expense.type;
+        document.getElementById('editDateInput').value = new Date(expense.date).toISOString().split('T')[0];
+        document.getElementById('editAmountInput').value = expense.amount;
+        document.getElementById('editDescInput').value = expense.description;
+        document.getElementById('editMileageInput').value = expense.mileage || '';
+        document.getElementById('editExpenseModal').classList.add('active');
+    };
+
+    window.closeEditModal = function() {
+        document.getElementById('editExpenseModal').classList.remove('active');
+        currentEditId = null;
+    };
+
+    window.saveEditedExpense = async function() {
+        if (!currentEditId) return;
+        const updates = {
+            car_id: document.getElementById('editCarSelect').value,
+            type: document.getElementById('editTypeSelect').value,
+            amount: parseFloat(document.getElementById('editAmountInput').value),
+            description: document.getElementById('editDescInput').value,
+            mileage: document.getElementById('editMileageInput').value ? parseInt(document.getElementById('editMileageInput').value) : null,
+            date: new Date(document.getElementById('editDateInput').value).toISOString()
+        };
+        await expensesRef.child(currentEditId).update(updates);
+        closeEditModal();
+    };
+
+    window.deleteExpense = async function(id) {
+        if (confirm('Удалить операцию?')) {
+            await expensesRef.child(id).remove();
+        }
+    };
+
+    window.deleteCurrentExpense = function() {
+        if (currentEditId) {
+            deleteExpense(currentEditId);
+            closeEditModal();
+        }
+    };
+
+    // Раскрытие списка
+    window.toggleFullList = function() {
+        isFullListVisible = !isFullListVisible;
+        const btn = document.getElementById('expandBtn');
+        const fullList = document.getElementById('operationsFull');
+        
+        if (isFullListVisible) {
+            btn.classList.add('expanded');
+            btn.querySelector('span:first-child').textContent = 'Скрыть';
+            fullList.classList.add('show');
+        } else {
+            btn.classList.remove('expanded');
+            btn.querySelector('span:first-child').textContent = 'Показать все';
+            fullList.classList.remove('show');
+        }
+    };
+
+    // Форматирование
+    function formatCurrency(amount) {
+        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(amount || 0);
+    }
+
+    // Загрузка данных
+    function loadData() {
+        carsRef.on('value', (snapshot) => {
+            carsData = snapshot.val() || {};
+            updateUI();
+        });
+
+        expensesRef.on('value', (snapshot) => {
+            expenses = [];
+            snapshot.forEach(child => {
+                const data = child.val();
+                expenses.push({
+                    id: child.key,
+                    car_id: data.car_id,
+                    type: data.type,
+                    amount: data.amount,
+                    description: data.description || '',
+                    mileage: data.mileage,
+                    date: new Date(data.date)
+                });
+            });
+            updateUI();
+        });
+    }
+
+    // Обновление интерфейса
+    function updateUI() {
+        // Подсчет статистики
+        let totals = { priora: 0, rio: 0 };
+        let counts = {
+            priora: { fuel: 0, service: 0, wash: 0, other: 0 },
+            rio: { fuel: 0, service: 0, wash: 0, other: 0 }
+        };
+        
+        expenses.forEach(e => {
+            if (e.car_id === 'priora' || e.car_id === 'rio') {
+                totals[e.car_id] += e.amount;
+                counts[e.car_id][e.type] = (counts[e.car_id][e.type] || 0) + 1;
+            }
+        });
+
+        // Формируем HTML
+        const filter = document.getElementById('historyFilter')?.value || 'all';
+        const sortedExpenses = [...expenses].sort((a, b) => b.date - a.date);
+        const filtered = filter === 'all' ? sortedExpenses : sortedExpenses.filter(e => e.car_id === filter);
+        const preview = filtered.slice(0, 2);
+        const totalCount = filtered.length;
+
+        const html = `
+            <div class="cars-list">
+                <!-- Приора -->
+                <div class="car-card ${selectedCar === 'priora' ? 'selected' : ''}" id="carPriora" onclick="selectCar('priora')">
+                    <div class="car-info">
+                        <div class="car-header">
+                            <span class="car-name">Лада Приора</span>
+                            <span class="car-total">${formatCurrency(totals.priora)}</span>
+                        </div>
+                        <div class="plate-container">
+                            <span class="plate-main">${carsData.priora?.plateMain || '—'}</span>
+                            <div class="plate-right">
+                                <span class="plate-region">${carsData.priora?.plateRegion || '—'}</span>
+                                <div class="plate-country">
+                                    <div class="russian-flag">
+                                        <div class="flag-white"></div>
+                                        <div class="flag-blue"></div>
+                                        <div class="flag-red"></div>
+                                    </div>
+                                    <span class="country-code">RUS</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vin-container">
+                            <span class="vin-label">VIN:</span>
+                            <span class="vin-value">${carsData.priora?.vin || '—'}</span>
+                        </div>
+                        <div class="car-stats">
+                            <span>⛽ Заправок: <span class="stat-number">${counts.priora.fuel}</span></span>
+                            <span>🔧 ТО: <span class="stat-number">${counts.priora.service}</span></span>
+                        </div>
+                    </div>
+                    <div class="car-chart">
+                        <div class="chart-container">
+                            <svg class="chart-svg" viewBox="0 0 40 40">
+                                <circle class="chart-circle-bg" cx="20" cy="20" r="16"></circle>
+                                <circle class="chart-circle fuel" id="prioraChartFuel" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                                <circle class="chart-circle service" id="prioraChartService" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                                <circle class="chart-circle wash" id="prioraChartWash" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                                <circle class="chart-circle other" id="prioraChartOther" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                            </svg>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item"><span class="legend-color fuel"></span><span class="legend-text">⛽</span></div>
+                            <div class="legend-item"><span class="legend-color service"></span><span class="legend-text">🔧</span></div>
+                            <div class="legend-item"><span class="legend-color wash"></span><span class="legend-text">🧼</span></div>
+                            <div class="legend-item"><span class="legend-color other"></span><span class="legend-text">📦</span></div>
+                        </div>
+                        <button class="chart-edit-btn" onclick="openSTSModalForCar('priora')">✏️ ред.</button>
+                    </div>
+                </div>
+
+                <!-- Rio -->
+                <div class="car-card ${selectedCar === 'rio' ? 'selected' : ''}" id="carRio" onclick="selectCar('rio')">
+                    <div class="car-info">
+                        <div class="car-header">
+                            <span class="car-name">Kia Rio</span>
+                            <span class="car-total">${formatCurrency(totals.rio)}</span>
+                        </div>
+                        <div class="plate-container">
+                            <span class="plate-main">${carsData.rio?.plateMain || '—'}</span>
+                            <div class="plate-right">
+                                <span class="plate-region">${carsData.rio?.plateRegion || '—'}</span>
+                                <div class="plate-country">
+                                    <div class="russian-flag">
+                                        <div class="flag-white"></div>
+                                        <div class="flag-blue"></div>
+                                        <div class="flag-red"></div>
+                                    </div>
+                                    <span class="country-code">RUS</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="vin-container">
+                            <span class="vin-label">VIN:</span>
+                            <span class="vin-value">${carsData.rio?.vin || '—'}</span>
+                        </div>
+                        <div class="car-stats">
+                            <span>⛽ Заправок: <span class="stat-number">${counts.rio.fuel}</span></span>
+                            <span>🔧 ТО: <span class="stat-number">${counts.rio.service}</span></span>
+                        </div>
+                    </div>
+                    <div class="car-chart">
+                        <div class="chart-container">
+                            <svg class="chart-svg" viewBox="0 0 40 40">
+                                <circle class="chart-circle-bg" cx="20" cy="20" r="16"></circle>
+                                <circle class="chart-circle fuel" id="rioChartFuel" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                                <circle class="chart-circle service" id="rioChartService" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                                <circle class="chart-circle wash" id="rioChartWash" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                                <circle class="chart-circle other" id="rioChartOther" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
+                            </svg>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item"><span class="legend-color fuel"></span><span class="legend-text">⛽</span></div>
+                            <div class="legend-item"><span class="legend-color service"></span><span class="legend-text">🔧</span></div>
+                            <div class="legend-item"><span class="legend-color wash"></span><span class="legend-text">🧼</span></div>
+                            <div class="legend-item"><span class="legend-color other"></span><span class="legend-text">📦</span></div>
+                        </div>
+                        <button class="chart-edit-btn" onclick="openSTSModalForCar('rio')">✏️ ред.</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Форма новой операции -->
+            <div class="form-section">
+                <h3>➕ Новая операция <span id="activeCarBadge" class="active-car-badge">${selectedCar === 'priora' ? 'Лада Приора' : 'Kia Rio'}</span></h3>
+                <div class="form-row">
+                    <label>Тип</label>
+                    <select id="expenseType">
+                        <option value="fuel">⛽ Заправка</option>
+                        <option value="service">🔧 ТО</option>
+                        <option value="wash">🧼 Мойка</option>
+                        <option value="other">📦 Прочее</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Дата</label>
+                    <input type="date" id="expenseDate" value="${new Date().toISOString().split('T')[0]}">
+                </div>
+                <div class="form-row">
+                    <label>Сумма</label>
+                    <input type="number" id="expenseAmount" placeholder="0">
+                </div>
+                <div class="form-row">
+                    <label>Описание</label>
+                    <textarea id="expenseDesc" placeholder="Детали..." rows="2"></textarea>
+                </div>
+                <div class="form-row">
+                    <label>Пробег</label>
+                    <input type="number" id="expenseMileage" placeholder="0">
+                </div>
+                <div class="button-group">
+                    <button class="primary" id="addExpenseBtn">➕ Добавить</button>
+                    <button id="resetFormBtn">🔄 Очистить</button>
+                </div>
+            </div>
+
+            <!-- Список операций -->
+            <div class="operations-section">
+                <div class="section-header">
+                    <h3>📋 Операции <span class="stats-badge">${totalCount}</span></h3>
+                </div>
+                
+                <select id="historyFilter" class="filter-select">
+                    <option value="all" ${filter === 'all' ? 'selected' : ''}>Все автомобили</option>
+                    <option value="priora" ${filter === 'priora' ? 'selected' : ''}>Лада Приора</option>
+                    <option value="rio" ${filter === 'rio' ? 'selected' : ''}>Kia Rio</option>
+                </select>
+                
+                <div class="operations-list">
+                    <div id="operationsPreview">
+                        ${preview.map(e => `
+                            <div class="operation-item">
+                                <div class="operation-main">
+                                    <div class="operation-icon">${e.type === 'fuel' ? '⛽' : e.type === 'service' ? '🔧' : e.type === 'wash' ? '🧼' : '📦'}</div>
+                                    <div class="operation-details">
+                                        <div class="operation-date">${e.date.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'})}</div>
+                                        <div class="operation-desc">${e.description || 'Без описания'}</div>
+                                    </div>
+                                </div>
+                                <div class="operation-right">
+                                    <div class="operation-amount">${formatCurrency(e.amount)}</div>
+                                    <div class="operation-car">${e.car_id === 'priora' ? 'Приора' : 'Rio'}</div>
+                                    <div class="action-buttons">
+                                        <button class="action-btn edit" onclick="openEditModal('${e.id}')">✏️</button>
+                                        <button class="action-btn delete" onclick="deleteExpense('${e.id}')">🗑</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${preview.length === 0 ? '<div class="empty-message">Нет записей</div>' : ''}
+                    </div>
+                    
+                    ${filtered.length > 2 ? `
+                        <button id="expandBtn" class="expand-btn" onclick="toggleFullList()">
+                            <span>Показать все</span>
+                            <span class="arrow">▼</span>
+                        </button>
+                        
+                        <div id="operationsFull" class="operations-full ${isFullListVisible ? 'show' : ''}">
+                            ${filtered.map(e => `
+                                <div class="operation-item">
+                                    <div class="operation-main">
+                                        <div class="operation-icon">${e.type === 'fuel' ? '⛽' : e.type === 'service' ? '🔧' : e.type === 'wash' ? '🧼' : '📦'}</div>
+                                        <div class="operation-details">
+                                            <div class="operation-date">${e.date.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'})}</div>
+                                            <div class="operation-desc">${e.description || 'Без описания'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="operation-right">
+                                        <div class="operation-amount">${formatCurrency(e.amount)}</div>
+                                        <div class="operation-car">${e.car_id === 'priora' ? 'Приора' : 'Rio'}</div>
+                                        <div class="action-buttons">
+                                            <button class="action-btn edit" onclick="openEditModal('${e.id}')">✏️</button>
+                                            <button class="action-btn delete" onclick="deleteExpense('${e.id}')">🗑</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('content').innerHTML = html;
+        
+        // Обновляем диаграммы
+        updateChart('priora', counts.priora);
+        updateChart('rio', counts.rio);
+
+        // Добавляем обработчики событий
+        document.getElementById('addExpenseBtn')?.addEventListener('click', addExpense);
+        document.getElementById('resetFormBtn')?.addEventListener('click', resetForm);
+        document.getElementById('historyFilter')?.addEventListener('change', function() {
+            isFullListVisible = false;
+            updateUI();
+        });
+    }
+
+    // Добавление операции
+    async function addExpense() {
+        const type = document.getElementById('expenseType').value;
+        const date = document.getElementById('expenseDate').value;
+        const amount = document.getElementById('expenseAmount').value;
+        const desc = document.getElementById('expenseDesc').value;
+        const mileage = document.getElementById('expenseMileage').value;
+
+        if (!amount || amount <= 0) {
+            alert('Введите сумму');
+            return;
+        }
+
+        await expensesRef.push({
+            car_id: selectedCar,
+            type: type,
+            amount: parseFloat(amount),
+            description: desc,
+            mileage: mileage ? parseInt(mileage) : null,
+            date: new Date(date).toISOString(),
+            timestamp: Date.now()
+        });
+
+        document.getElementById('expenseAmount').value = '';
+        document.getElementById('expenseDesc').value = '';
+        document.getElementById('expenseMileage').value = '';
+    }
+
+    function resetForm() {
+        document.getElementById('expenseType').value = 'fuel';
+        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('expenseAmount').value = '';
+        document.getElementById('expenseDesc').value = '';
+        document.getElementById('expenseMileage').value = '';
+    }
+
+    // Запуск
+    document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
