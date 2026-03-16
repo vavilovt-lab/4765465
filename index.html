@@ -1,1215 +1,487 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#1a2b3c">
-    
-    <title>🚗 AutoTrack</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://www.gstatic.com">
-    <link rel="preconnect" href="https://cars-b0e4e-default-rtdb.asia-southeast1.firebasedatabase.app">
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Футбольные чемпионаты · ZfAN v4.5.1</title>
     <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
         }
-        
         body {
-            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            padding: 12px;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            background: #1e3b4a;
+            padding: 18px;
         }
-        
         .app {
-            max-width: 500px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .loader {
-            text-align: center;
-            padding: 60px 20px;
-            color: #64748b;
-            font-size: 16px;
-        }
-        
-        .loader::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            margin-left: 10px;
-            border: 3px solid #e2e8f0;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-            color: white;
-            padding: 20px 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header h1 {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .content { 
-            padding: 20px; 
-            background: rgba(255, 255, 255, 0.9);
-        }
-        
-        .cars-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        
-        .car-card {
-            background: white;
+            max-width: 1500px;
+            margin: 0 auto;
+            background: #eaf0f3;
             border-radius: 24px;
-            padding: 16px;
-            cursor: pointer;
-            transition: transform 0.2s ease, border-color 0.2s ease;
-            border: 2px solid transparent;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            display: flex;
-            gap: 12px;
-        }
-        
-        .car-card.selected {
-            border-color: #667eea;
-            background: linear-gradient(145deg, #f8faff, #f0f4ff);
-        }
-        
-        .car-info {
-            flex: 1;
-        }
-        
-        .car-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .car-name {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1a2b3c;
-        }
-        
-        .car-total {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        
-        .plate-container {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border: 2px solid #1e293b;
-            border-radius: 6px;
-            padding: 4px 8px;
-            margin: 6px 0 6px 0;
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            width: fit-content;
-        }
-        
-        .plate-main {
-            font-family: 'Courier New', monospace;
-            font-size: 22px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            color: #1e293b;
-        }
-        
-        .plate-right {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 2px;
-            border-left: 2px solid #1e293b;
-            padding-left: 8px;
-        }
-        
-        .plate-region {
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            font-weight: 700;
-            color: #1e293b;
-        }
-        
-        .plate-country {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        
-        .russian-flag {
-            display: flex;
-            flex-direction: column;
-            width: 20px;
-            height: 15px;
-            border: 1px solid #1e293b;
-            border-radius: 2px;
+            box-shadow: 0 25px 50px rgba(0,20,30,0.7);
             overflow: hidden;
+            border: 1px solid #9ec5d0;
         }
-        
-        .flag-white { flex: 1; background: white; }
-        .flag-blue { flex: 1; background: #0039a6; }
-        .flag-red { flex: 1; background: #d52b1e; }
-        
-        .country-code {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
+        /* шапка */
+        .header {
+            background: #08222b;
+            color: #ffcf4a;
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #b3861e;
+        }
+        .header h1 {
             font-weight: 700;
-            color: #1e293b;
+            font-size: 28px;
+            letter-spacing: 1.5px;
+            text-shadow: 2px 2px 0 #144d5e;
         }
-        
-        .vin-container {
-            margin: 4px 0 6px 0;
-            font-size: 11px;
-            color: #64748b;
-        }
-        
-        .vin-label {
-            text-transform: uppercase;
+        .header .ver {
+            background: #193e4a;
+            padding: 6px 14px;
+            border-radius: 40px;
+            color: #ffe27a;
             font-weight: 600;
-            margin-right: 4px;
+            font-size: 14px;
         }
-        
-        .vin-value {
-            font-family: 'Courier New', monospace;
-            font-weight: 500;
-            color: #1e293b;
+        /* панель главного меню */
+        .main-menu {
+            background: #265b6b;
+            padding: 10px 30px;
+            display: flex;
+            gap: 30px;
+            color: white;
+            font-weight: 600;
+            border-bottom: 2px solid #f3b82e;
+            flex-wrap: wrap;
         }
-        
-        .car-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #64748b;
-            margin-top: 8px;
+        .main-menu span {
+            cursor: pointer;
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
         }
-        
-        .car-chart {
+        .main-menu span:hover {
+            border-bottom-color: #ffdb8e;
+            color: #ffd966;
+        }
+        /* левое меню и основной контент */
+        .layout {
+            display: flex;
+            min-height: 700px;
+        }
+        /* левая панель - все функции */
+        .left-panel {
+            width: 240px;
+            background: #1d4b58;
+            border-right: 3px solid #e5a823;
+            padding: 20px 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-width: 90px;
         }
-        
-        .chart-container {
-            width: 80px;
-            height: 80px;
+        .left-panel .nav-item {
+            padding: 13px 18px;
+            color: #f0fafe;
+            font-weight: 600;
+            font-size: 15px;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+            transition: 0.15s;
+            letter-spacing: 0.2px;
+            border-bottom: 1px solid #36707e;
         }
-        
-        .chart-svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
+        .left-panel .nav-item:hover {
+            background: #2c687a;
+            border-left-color: #ffc857;
+            color: white;
         }
-        
-        .chart-circle-bg {
-            stroke: #e2e8f0;
-            stroke-width: 8;
-            fill: none;
+        .left-panel .nav-item.active {
+            background: #15404b;
+            border-left-color: #f1c232;
+            color: #ffda89;
         }
-        
-        .chart-circle {
-            stroke-width: 8;
-            fill: none;
-            stroke-linecap: round;
-            transition: stroke-dasharray 0.3s ease;
+        /* центральная область */
+        .content {
+            flex: 1;
+            padding: 25px;
+            background: #f1f9fc;
         }
-        
-        .chart-circle.fuel { stroke: #48bb78; }
-        .chart-circle.service { stroke: #f6ad55; }
-        .chart-circle.wash { stroke: #4299e1; }
-        .chart-circle.other { stroke: #9f7aea; }
-        
-        .chart-legend {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 4px;
-            margin-top: 6px;
-            width: 100%;
-        }
-        
-        .legend-item {
+        /* панель управления над таблицей */
+        .toolbar {
+            background: #d5e7ed;
+            border-radius: 50px;
+            padding: 12px 25px;
             display: flex;
             align-items: center;
-            gap: 2px;
-            font-size: 8px;
-            font-weight: 600;
+            gap: 30px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
         }
-        
-        .legend-color {
-            width: 6px;
-            height: 6px;
-            border-radius: 3px;
-        }
-        
-        .legend-color.fuel { background: #48bb78; }
-        .legend-color.service { background: #f6ad55; }
-        .legend-color.wash { background: #4299e1; }
-        .legend-color.other { background: #9f7aea; }
-        
-        .legend-text {
-            color: #64748b;
-        }
-        
-        .chart-edit-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 3px 8px;
-            border-radius: 20px;
-            font-size: 9px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 4px;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            justify-content: center;
+        .toolbar label {
+            display: flex;
             align-items: center;
-            padding: 16px;
+            gap: 8px;
+            font-weight: 600;
         }
-        
-        .modal.active { 
-            display: flex; 
+        select, button {
+            background: white;
+            border: 1px solid #2f7a8c;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
         }
-        
-        .modal-content {
+        button {
+            background: #fdcb5c;
+            border: none;
+            font-weight: 700;
+            box-shadow: 0 3px 0 #a7691a;
+            transition: 0.1s;
+        }
+        button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #a7691a;
+        }
+        /* таблица */
+        .tournament-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,40,50,0.3);
+            margin-bottom: 30px;
+        }
+        .tournament-table th {
+            background: #0f424f;
+            color: #ffd966;
+            padding: 14px 5px;
+            font-weight: 700;
+        }
+        .tournament-table td {
+            padding: 12px 5px;
+            border-bottom: 1px solid #bed7e0;
+            text-align: center;
+        }
+        .tournament-table td:first-child {
+            font-weight: 700;
+            background: #e5f0f3;
+        }
+        .tournament-table td:nth-child(2) {
+            text-align: left;
+            padding-left: 15px;
+        }
+        /* карточка контента */
+        .detail-card {
             background: white;
             border-radius: 28px;
-            padding: 24px;
-            max-width: 400px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
+            padding: 22px;
+            border: 2px solid #bcd1d9;
+            box-shadow: inset 0 1px 6px #c2dee8;
         }
-        
-        .modal-title {
-            font-size: 20px;
+        .detail-title {
+            color: #0b4452;
+            font-size: 22px;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            border-left: 10px solid #f3b82e;
+            padding-left: 20px;
         }
-        
-        .modal-form-row { margin-bottom: 12px; }
-        
-        .modal-form-row label {
-            display: block;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #64748b;
-            margin-bottom: 4px;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 12px;
         }
-        
-        .modal-form-row input,
-        .modal-form-row select {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
+        .stat-item {
+            background: #e3f0f5;
+            border-radius: 30px;
+            padding: 12px 20px;
+            font-weight: 500;
+        }
+        .footer {
+            background: #12424e;
+            color: #bcdbe5;
+            padding: 12px 30px;
+            text-align: right;
             font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            -webkit-appearance: none;
+            border-top: 2px solid #e2b13b;
         }
-        
-        .modal-buttons {
-            display: flex;
-            gap: 8px;
+        .json-box {
+            background: #192f37;
+            color: #bfe2ef;
+            padding: 16px;
+            border-radius: 18px;
+            font-family: monospace;
+            font-size: 13px;
             margin-top: 20px;
-        }
-        
-        .modal-buttons button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        
-        .modal-buttons button.primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-        
-        .modal-buttons button.delete {
-            background: #f87171;
-            color: white;
-        }
-        
-        .form-section {
-            background: linear-gradient(145deg, #ffffff, #f8fafc);
-            border-radius: 24px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 2px solid #e2e8f0;
-        }
-        
-        .form-section h3 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            color: #1a2b3c;
-        }
-        
-        .form-row { margin-bottom: 12px; }
-        
-        .form-row label {
-            display: block;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-        
-        .form-row input,
-        .form-row select,
-        .form-row textarea {
-            width: 100%;
-            padding: 12px 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
-            background: white;
-            -webkit-appearance: none;
-        }
-        
-        .button-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-        
-        .button-group button {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 30px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        
-        .button-group button.primary {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-            color: white;
-        }
-        
-        .active-car-badge {
-            background: linear-gradient(135deg, #667eea15, #764ba215);
-            color: #667eea;
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .operations-section {
-            margin-top: 20px;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .section-header h3 {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a2b3c;
-        }
-        
-        .stats-badge {
-            background: linear-gradient(135deg, #667eea15, #764ba215);
-            color: #667eea;
-            padding: 3px 8px;
-            border-radius: 30px;
-            font-size: 11px;
-            font-weight: 600;
-            margin-left: 6px;
-        }
-        
-        .filter-select {
-            width: 100%;
-            padding: 10px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 30px;
-            font-size: 13px;
-            background: white;
-            margin-bottom: 12px;
-            -webkit-appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 12px center;
-            background-size: 12px;
-        }
-        
-        .operations-list {
-            background: white;
-            border-radius: 20px;
-            border: 2px solid #e2e8f0;
-            overflow: hidden;
-        }
-        
-        .operation-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-        
-        .operation-item:last-child {
-            border-bottom: none;
-        }
-        
-        .operation-main {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .operation-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #667eea15, #764ba215);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-        
-        .operation-details {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-        
-        .operation-date {
-            font-size: 11px;
-            color: #64748b;
-        }
-        
-        .operation-desc {
-            font-weight: 600;
-            color: #1e293b;
-            font-size: 13px;
-        }
-        
-        .operation-right {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .operation-amount {
-            font-weight: 700;
-            color: #2d3748;
-            font-size: 14px;
-        }
-        
-        .operation-car {
-            font-size: 11px;
-            color: #667eea;
-            font-weight: 600;
-            background: #f0f4ff;
-            padding: 3px 6px;
-            border-radius: 16px;
-        }
-        
-        .action-btn {
-            background: none;
-            border: none;
-            font-size: 14px;
-            cursor: pointer;
-            padding: 4px 6px;
-            border-radius: 8px;
-        }
-        
-        .expand-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            border-top: 2px solid #e2e8f0;
-        }
-        
-        .expand-btn .arrow {
-            transition: transform 0.3s ease;
-        }
-        
-        .expand-btn.expanded .arrow {
-            transform: rotate(180deg);
-        }
-        
-        .operations-full {
-            display: none;
-            border-top: 2px solid #e2e8f0;
-        }
-        
-        .operations-full.show {
-            display: block;
-        }
-        
-        .empty-message {
-            text-align: center;
-            padding: 30px;
-            color: #94a3b8;
-        }
-        
-        @media (max-width: 380px) {
-            .car-card {
-                padding: 12px;
-                gap: 8px;
-            }
-            
-            .plate-main {
-                font-size: 18px;
-            }
-            
-            .plate-region {
-                font-size: 14px;
-            }
-            
-            .chart-container {
-                width: 70px;
-                height: 70px;
-            }
-            
-            .operation-amount {
-                font-size: 12px;
-            }
+            border: 1px solid #ebbc5e;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
-<div class="app">
+<div class="app" id="app">
+
     <div class="header">
-        <h1>🚗 AutoTrack</h1>
+        <h1>⚽ ФУТБОЛЬНЫЕ ЧЕМПИОНАТЫ · ZfAN</h1>
+        <div class="ver">Версия 4.5.1 · 20.10.2017 · Бесплатная</div>
     </div>
-    
-    <div class="content" id="content">
-        <div class="loader">Загрузка данных</div>
-    </div>
-</div>
 
-<!-- Модальные окна (скрыты изначально) -->
-<div id="stsModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-title">📋 Редактировать СТС</div>
-        <div class="modal-form-row">
-            <label>Автомобиль</label>
-            <select id="modalCarSelect">
-                <option value="priora">Лада Приора</option>
-                <option value="rio">Kia Rio</option>
-            </select>
+    <div class="main-menu">
+        <span>📋 Файл</span><span>✏️ Правка</span><span>📊 Вид</span><span>⚙️ Настройки</span><span>📈 Прогнозы</span><span>🖨️ Печать</span><span>🌍 Экспорт HTML</span><span>❓ Помощь</span>
+    </div>
+
+    <div class="layout">
+        <!-- Левое меню (полный функционал) -->
+        <div class="left-panel" id="leftMenu">
+            <div class="nav-item active" data-page="table">🏆 Таблица</div>
+            <div class="nav-item" data-page="input">📝 Ввод результатов</div>
+            <div class="nav-item" data-page="stats">📊 Обширная статистика</div>
+            <div class="nav-item" data-page="players">👥 Игроки / составы</div>
+            <div class="nav-item" data-page="referees">⚖️ Судьи / оценки</div>
+            <div class="nav-item" data-page="cards">🟨 Карточки / пенальти</div>
+            <div class="nav-item" data-page="groups">🎲 Многогрупповые</div>
+            <div class="nav-item" data-page="cups">🏆 Кубки (без учёта)</div>
+            <div class="nav-item" data-page="transfers">🔄 Переходы игроков</div>
+            <div class="nav-item" data-page="penalty">🚫 Незабитые пенальти</div>
+            <div class="nav-item" data-page="tech">📌 Технические результаты</div>
+            <div class="nav-item" data-page="deduct">⚖️ Снятие/добавление очков</div>
+            <div class="nav-item" data-page="ratings">📈 Рейтинги команд</div>
+            <div class="nav-item" data-page="predict">🔮 Прогнозы алгоритмы</div>
+            <div class="nav-item" data-page="export">💾 Экспорт / обмен</div>
         </div>
-        <div class="modal-form-row">
-            <label>Госномер</label>
-            <input type="text" id="inputPlateMain" placeholder="C065MK" maxlength="6">
-        </div>
-        <div class="modal-form-row">
-            <label>Код региона</label>
-            <input type="text" id="inputPlateRegion" placeholder="78" maxlength="3">
-        </div>
-        <div class="modal-form-row">
-            <label>VIN номер</label>
-            <input type="text" id="inputVin" placeholder="XTAGFL3308Y123456" maxlength="17">
-        </div>
-        <div class="modal-buttons">
-            <button onclick="saveSTS()" class="primary">Сохранить</button>
-            <button onclick="closeSTSModal()">Отмена</button>
+
+        <!-- Основной контент -->
+        <div class="content" id="contentArea">
+            <!-- Верхняя панель: выбор правил, очки и пр. -->
+            <div class="toolbar">
+                <label>🏅 Правила сортировки:
+                    <select id="sortRule">
+                        <option>стандарт (очки > личн > разн)</option>
+                        <option>ничьи > победы</option>
+                        <option>по числу голов</option>
+                    </select>
+                </label>
+                <label>⭐ Очки: победа <input type="number" value="3" style="width:50px;"> / ничья <input type="number" value="1" style="width:50px;"></label>
+                <label>📅 Учитывать: <select><option>Все матчи</option><option>Дома</option><option>В гостях</option></select></label>
+                <button>⚡ Пересчитать всё</button>
+                <button>🔄 Автообновление</button>
+            </div>
+
+            <!-- ТАБЛИЦА ЧЕМПИОНАТА (базовая, всегда отображается) -->
+            <table class="tournament-table" id="leagueTable">
+                <thead><tr><th>#</th><th>Команда</th><th>И</th><th>В</th><th>Н</th><th>П</th><th>МЗ</th><th>МП</th><th>Р</th><th>О</th></tr></thead>
+                <tbody id="tableBody">
+                    <!-- динамика из JSON -->
+                </tbody>
+            </table>
+
+            <!-- Динамический блок для отображения дополнительной информации (судьи, игроки, голы, карточки и т.д.) -->
+            <div class="detail-card" id="detailCard">
+                <div class="detail-title" id="detailTitle">📋 Таблица · Чемпионат России 2007</div>
+                <div id="detailContent">
+                    <!-- Здесь будут данные по активному пункту левого меню -->
+                    <div class="stats-grid" id="statsGrid"></div>
+                    <div class="json-box" id="jsonPreview">
+{ "база": "Чемпионат 2007", "матчей": 32, "команд": 16, "лицензия": "Free", "ОС": "Windows 10/8/7/XP" }
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-<div id="editExpenseModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-title">✏️ Редактировать</div>
-        <div class="modal-form-row">
-            <label>Автомобиль</label>
-            <select id="editCarSelect">
-                <option value="priora">Лада Приора</option>
-                <option value="rio">Kia Rio</option>
-            </select>
-        </div>
-        <div class="modal-form-row">
-            <label>Тип</label>
-            <select id="editTypeSelect">
-                <option value="fuel">⛽ Заправка</option>
-                <option value="service">🔧 ТО</option>
-                <option value="wash">🧼 Мойка</option>
-                <option value="other">📦 Прочее</option>
-            </select>
-        </div>
-        <div class="modal-form-row">
-            <label>Дата</label>
-            <input type="date" id="editDateInput">
-        </div>
-        <div class="modal-form-row">
-            <label>Сумма (₽)</label>
-            <input type="number" id="editAmountInput" placeholder="0">
-        </div>
-        <div class="modal-form-row">
-            <label>Описание</label>
-            <textarea id="editDescInput" rows="2" placeholder="Описание"></textarea>
-        </div>
-        <div class="modal-form-row">
-            <label>Пробег (км)</label>
-            <input type="number" id="editMileageInput" placeholder="0">
-        </div>
-        <div class="modal-buttons">
-            <button onclick="saveEditedExpense()" class="primary">💾 Сохранить</button>
-            <button onclick="closeEditModal()">Отмена</button>
-            <button onclick="deleteCurrentExpense()" class="delete">🗑 Удалить</button>
-        </div>
+    <div class="footer">
+        <span>Разработчик: ZfAN · Категория: Спорт · Размер: 1,12 Мб · Интерфейс: Русский · Обновлено: 20.10.2017</span>
     </div>
 </div>
 
 <script>
-    // Firebase config
-    const firebaseConfig = {
-        apiKey: "AIzaSyDBTx6JbOmniZpb5dUiHusrPGnZMz5CZlY",
-        authDomain: "cars-b0e4e.firebaseapp.com",
-        databaseURL: "https://cars-b0e4e-default-rtdb.asia-southeast1.firebasedatabase.app",
-        projectId: "cars-b0e4e",
-        storageBucket: "cars-b0e4e.firebasestorage.app",
-        messagingSenderId: "357319051116",
-        appId: "1:357319051116:web:fcd8493b61bc316f6b9549"
-    };
+    (function() {
+        // --- БАЗА ДАННЫХ НА ОСНОВЕ JSON (ПОЛНОСТЬЮ РАБОЧАЯ) ---
+        const DB = {
+            "чемпионат": "РФПЛ 2007",
+            "команды": [
+                "Спартак (Москва)", "Москва", "ЦСКА (Москва)", "Амкар (Пермь)", "Крылья Советов (Самара)", "Томь (Томск)",
+                "Динамо (Москва)", "Зенит (СПб)", "Спартак (Нальчик)", "Луч-Энергия (Владивосток)", "Химки", "Локомотив (Москва)",
+                "Рубин (Казань)", "Сатурн (МО)", "Кубань (Краснодар)", "Ростов"
+            ],
+            "турнирная_таблица": [
+                {"команда":"Спартак (Москва)","и":4,"в":3,"н":1,"п":0,"мз":6,"мп":2,"о":10},
+                {"команда":"Москва","и":4,"в":3,"н":1,"п":0,"мз":4,"мп":0,"о":10},
+                {"команда":"ЦСКА (Москва)","и":4,"в":2,"н":2,"п":0,"мз":7,"мп":3,"о":8},
+                {"команда":"Амкар (Пермь)","и":4,"в":1,"н":3,"п":0,"мз":5,"мп":3,"о":6},
+                {"команда":"Крылья Советов (Самара)","и":4,"в":1,"н":3,"п":0,"мз":2,"мп":1,"о":6},
+                {"команда":"Томь (Томск)","и":4,"в":1,"н":2,"п":1,"мз":5,"мп":5,"о":5},
+                {"команда":"Динамо (Москва)","и":4,"в":1,"н":2,"п":1,"мз":4,"мп":4,"о":5},
+                {"команда":"Зенит (СПб)","и":4,"в":1,"н":2,"п":1,"мз":6,"мп":7,"о":5},
+                {"команда":"Спартак (Нальчик)","и":4,"в":1,"н":2,"п":1,"мз":3,"мп":4,"о":5},
+                {"команда":"Луч-Энергия","и":4,"в":1,"н":1,"п":2,"мз":3,"мп":5,"о":4},
+                {"команда":"Химки","и":4,"в":1,"н":1,"п":2,"мз":3,"мп":5,"о":4},
+                {"команда":"Локомотив (Москва)","и":4,"в":1,"н":1,"п":2,"мз":3,"мп":5,"о":4},
+                {"команда":"Рубин (Казань)","и":4,"в":1,"н":0,"п":3,"мз":4,"мп":7,"о":3},
+                {"команда":"Сатурн (МО)","и":4,"в":0,"н":3,"п":1,"мз":3,"мп":4,"о":3},
+                {"команда":"Кубань (Краснодар)","и":4,"в":0,"н":2,"п":2,"мз":2,"мп":4,"о":2},
+                {"команда":"Ростов","и":4,"в":0,"н":2,"п":2,"мз":6,"мп":9,"о":2}
+            ],
+            "игроки": [
+                {"имя":"Павлюченко","команда":"Спартак М","голы":4,"передачи":2,"карточки":"жк1"},
+                {"имя":"Вагнер Лав","команда":"ЦСКА","голы":5,"пенальти":1,"мимо":1},
+                {"имя":"Кержаков","команда":"Зенит","голы":3,"оценка":7.2}
+            ],
+            "судьи": [
+                {"фио":"Иванов В.","матчей":3,"оценка":4.5,"карточек":12},
+                {"фио":"Петров А.","матчей":2,"оценка":4.2,"пенальти":1}
+            ],
+            "карточки_пенальти": [
+                {"матч":"Спартак-ЦСКА","жк":4,"кк":0,"пенальти_незабитые":[{"минута":34,"причина":"мимо"}]}
+            ],
+            "кубки": [
+                {"турнир":"Кубок России 2007","матчи":[{"ком1":"Спартак","ком2":"Локомотив","счет":"2:1"}]}
+            ],
+            "переходы": [
+                {"игрок":"Погребняк","из":"Томь","в":"Зенит","сезон":2007}
+            ],
+            "технические_результаты": ["Торпедо — Динамо 0:3 (техн.)"],
+            "зрители": 15800,
+            "оценка_судей_средняя": 4.3,
+            "рейт": [{"команда":"Спартак","рейтинг":1520},{"команда":"ЦСКА","рейтинг":1500}]
+        };
 
-    // Инициализация
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-    const expensesRef = database.ref('expenses');
-    const carsRef = database.ref('cars');
-
-    // Глобальные переменные
-    let expenses = [];
-    let carsData = {};
-    let selectedCar = 'priora';
-    let currentEditId = null;
-    let isFullListVisible = false;
-
-    // Функция обновления диаграммы
-    function updateChart(carId, counts) {
-        const total = counts.fuel + counts.service + counts.wash + counts.other;
-        const circumference = 2 * Math.PI * 16;
-        
-        if (total === 0) {
-            const types = ['fuel', 'service', 'wash', 'other'];
-            types.forEach(type => {
-                const el = document.getElementById(`${carId}Chart${type.charAt(0).toUpperCase() + type.slice(1)}`);
-                if (el) el.setAttribute('stroke-dasharray', `0 ${circumference}`);
+        // Отрисовка таблицы
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            if (!tbody) return;
+            let html = '';
+            DB.турнирная_таблица.forEach((row, idx) => {
+                let raz = row.мз - row.мп;
+                html += `<tr><td>${idx+1}</td><td>${row.команда}</td><td>${row.и}</td><td>${row.в}</td><td>${row.н}</td><td>${row.п}</td><td>${row.мз}</td><td>${row.мп}</td><td>${raz}</td><td><b>${row.о}</b></td></tr>`;
             });
-            return;
+            tbody.innerHTML = html;
         }
-        
-        let offset = 0;
-        const types = ['fuel', 'service', 'wash', 'other'];
-        
-        types.forEach(type => {
-            const percentage = counts[type] / total;
-            const dashLength = percentage * circumference;
-            const el = document.getElementById(`${carId}Chart${type.charAt(0).toUpperCase() + type.slice(1)}`);
-            if (el) {
-                el.setAttribute('stroke-dasharray', `${dashLength} ${circumference - dashLength}`);
-                el.setAttribute('stroke-dashoffset', -offset);
+
+        // Обновление детальной карточки в зависимости от выбранного пункта левого меню
+        function updateDetailPage(pageId) {
+            const titleEl = document.getElementById('detailTitle');
+            const statsGrid = document.getElementById('statsGrid');
+            const jsonPreview = document.getElementById('jsonPreview');
+            let title = '';
+            let gridHTML = '';
+            let jsonDump = '';
+
+            if (pageId === 'table') {
+                title = '📋 Турнирная таблица (правила сортировки: стандарт)';
+                gridHTML = '<div class="stat-item">⚽ Лучший бомбардир: Павлюченко (4 гола)</div><div class="stat-item">🅰 Лучший ассистент: Титов (3)</div><div class="stat-item">🧤 Сухие матчи: Москва (4 пропущ.)</div>';
+                jsonDump = JSON.stringify(DB.турнирная_таблица.slice(0,3), null, 2);
             }
-            offset += dashLength;
-        });
-    }
+            else if (pageId === 'input') {
+                title = '✏️ Ввод результатов матча';
+                gridHTML = '<div class="stat-item">Спартак - ЦСКА 1:0 (гол: Павлюченко, 67")</div><div class="stat-item">Зенит - Динамо 2:2 (Анюков, Аршавин; Данни, Кокорин)</div><div class="stat-item">зрители: 28700, судья: Иванов, оценка: 4.3</div>';
+                jsonDump = '{"матчи": [{"хозяева":"Спартак","гости":"ЦСКА","голы":[34]}]}';
+            }
+            else if (pageId === 'stats') {
+                title = '📊 Обширная статистика чемпионата';
+                gridHTML = '<div class="stat-item">Всего голов: 68 (2.55 за матч)</div><div class="stat-item">ЖК/КК: 112/6</div><div class="stat-item">Пенальти: 8 (2 незабито)</div><div class="stat-item">Ср. посещаемость: 12800</div>';
+                jsonDump = '{"статистика":{"голов":68,"жк":112,"кк":6,"ср_зрители":12800}}';
+            }
+            else if (pageId === 'players') {
+                title = '👥 Составы, игроки, оценки, время на поле';
+                gridHTML = '<div class="stat-item">Павлюченко (Спартак): 4 гола, 2 передачи, оценка 7.8</div><div class="stat-item">Вагнер Лав (ЦСКА): 5 голов, 1 пенали, мимо</div><div class="stat-item">Кержаков (Зенит): 3 гола, 90 мин в среднем</div>';
+                jsonDump = JSON.stringify(DB.игроки, null, 2);
+            }
+            else if (pageId === 'referees') {
+                title = '⚖️ Судьи / оценки за матч';
+                gridHTML = '<div class="stat-item">Иванов: 4 матча, ср.оценка 4.6, 12 жк</div><div class="stat-item">Петров: 3 матча, оценка 4.2, один пенальти</div>';
+                jsonDump = JSON.stringify(DB.судьи, null, 2);
+            }
+            else if (pageId === 'cards') {
+                title = '🟨 Карточки, удаления, незабитые пенальти';
+                gridHTML = '<div class="stat-item">Спартак-ЦСКА: 4жк, 0кк, незабитый пенальти (мимо, 34")</div><div class="stat-item">Всего незабитых: 2 (мимо, штанга, вратарь)</div>';
+                jsonDump = JSON.stringify(DB.карточки_пенальти, null, 2);
+            }
+            else if (pageId === 'groups') {
+                title = '🎲 Многогрупповые турниры (Лига Чемпионов)';
+                gridHTML = '<div class="stat-item">Группа A: Спартак 7, Интер 5</div><div class="stat-item">Группа B: ЦСКА 6, Бавария 6</div>';
+                jsonDump = '{"группы":{"A":[{"Спартак":7},{"Интер":5}]}}';
+            }
+            else if (pageId === 'cups') {
+                title = '🏆 Кубковые матчи (без учёта в таблице)';
+                gridHTML = '<div class="stat-item">1/4: Спартак - Локомотив 2:1</div><div class="stat-item">1/2: ЦСКА - Зенит 3:0</div>';
+                jsonDump = JSON.stringify(DB.кубки, null, 2);
+            }
+            else if (pageId === 'transfers') {
+                title = '🔄 Переходы игроков (статистика сохраняется)';
+                gridHTML = '<div class="stat-item">Погребняк: Томь → Зенит (2007) 12 голов</div><div class="stat-item">Быстров: Зенит → Спартак → Зенит</div>';
+                jsonDump = JSON.stringify(DB.переходы, null, 2);
+            }
+            else if (pageId === 'penalty') {
+                title = '🚫 Незабитые пенальти (минута, игрок, тип промаха)';
+                gridHTML = '<div class="stat-item">89" (Спартак): Павлюченко — штанга</div><div class="stat-item">43" (Динамо): Кержаков — вратарь отбил</div>';
+                jsonDump = '[{"минута":89,"игрок":"Павлюченко","тип":"штанга"}]';
+            }
+            else if (pageId === 'tech') {
+                title = '📌 Технические результаты';
+                gridHTML = '<div class="stat-item">Ростов — Кубань 0:3 (техн.) неявка</div><div class="stat-item">Луч-Энергия +:- снятие</div>';
+                jsonDump = JSON.stringify(DB.технические_результаты, null, 2);
+            }
+            else if (pageId === 'deduct') {
+                title = '⚖️ Снятие / добавление очков';
+                gridHTML = '<div class="stat-item">Спартак: -3 очка (нарушение регламента)</div><div class="stat-item">Москва: +1 очко (апелляция)</div>';
+                jsonDump = '{"штрафы":[{"команда":"Спартак","очки":-3}]}';
+            }
+            else if (pageId === 'ratings') {
+                title = '📈 Рейтинги команд (на основе результатов)';
+                gridHTML = '<div class="stat-item">Спартак: 1520 (+12)</div><div class="stat-item">ЦСКА: 1500 (+8)</div>';
+                jsonDump = JSON.stringify(DB.рейт, null, 2);
+            }
+            else if (pageId === 'predict') {
+                title = '🔮 Прогнозы по оригинальным алгоритмам';
+                gridHTML = '<div class="stat-item">Спартак — Зенит: 2-1 (вероятность 47%)</div><div class="stat-item">ЦСКА — Локо: тотал 2.5 бол 52%</div>';
+                jsonDump = '{"алгоритм":"eloregres","прогноз":[{"матч":"Спартак-Зенит","счет":"2-1"}]}';
+            }
+            else if (pageId === 'export') {
+                title = '💾 Экспорт данных / обмен между чемпионатами';
+                gridHTML = '<div class="stat-item">HTML-экспорт выполнен: data_export.html</div><div class="stat-item">Обмен: импорт из чемпионата Италии</div>';
+                jsonDump = '{"экспорт":"html","файл":"champ_2007.html","размер":"345Кб"}';
+            }
+            else {
+                title = 'Таблица · Чемпионат';
+                gridHTML = '<div class="stat-item">Выберите раздел</div>';
+                jsonDump = '{"база":"РФПЛ 2007"}';
+            }
 
-    // Выбор авто
-    window.selectCar = function(carId) {
-        selectedCar = carId;
-        document.getElementById('carPriora')?.classList.remove('selected');
-        document.getElementById('carRio')?.classList.remove('selected');
-        
-        if (carId === 'priora') {
-            document.getElementById('carPriora')?.classList.add('selected');
-            document.getElementById('activeCarBadge').textContent = 'Лада Приора';
-        } else {
-            document.getElementById('carRio')?.classList.add('selected');
-            document.getElementById('activeCarBadge').textContent = 'Kia Rio';
+            titleEl.innerText = title;
+            statsGrid.innerHTML = gridHTML;
+            jsonPreview.innerText = jsonDump;
         }
-    };
 
-    // Модальные окна СТС
-    window.openSTSModalForCar = function(carId) {
-        document.getElementById('modalCarSelect').value = carId;
-        const car = carsData[carId] || {};
-        document.getElementById('inputPlateMain').value = car.plateMain || '';
-        document.getElementById('inputPlateRegion').value = car.plateRegion || '';
-        document.getElementById('inputVin').value = car.vin || '';
-        document.getElementById('stsModal').classList.add('active');
-    };
-
-    window.closeSTSModal = function() {
-        document.getElementById('stsModal').classList.remove('active');
-    };
-
-    window.saveSTS = function() {
-        const carId = document.getElementById('modalCarSelect').value;
-        const carData = {
-            plateMain: document.getElementById('inputPlateMain').value,
-            plateRegion: document.getElementById('inputPlateRegion').value,
-            vin: document.getElementById('inputVin').value
-        };
-        carsRef.child(carId).set(carData);
-        carsData[carId] = carData;
-        updateUI();
-        closeSTSModal();
-    };
-
-    // Редактирование операций
-    window.openEditModal = function(id) {
-        const expense = expenses.find(e => e.id === id);
-        if (!expense) return;
-        currentEditId = id;
-        document.getElementById('editCarSelect').value = expense.car_id;
-        document.getElementById('editTypeSelect').value = expense.type;
-        document.getElementById('editDateInput').value = new Date(expense.date).toISOString().split('T')[0];
-        document.getElementById('editAmountInput').value = expense.amount;
-        document.getElementById('editDescInput').value = expense.description;
-        document.getElementById('editMileageInput').value = expense.mileage || '';
-        document.getElementById('editExpenseModal').classList.add('active');
-    };
-
-    window.closeEditModal = function() {
-        document.getElementById('editExpenseModal').classList.remove('active');
-        currentEditId = null;
-    };
-
-    window.saveEditedExpense = async function() {
-        if (!currentEditId) return;
-        const updates = {
-            car_id: document.getElementById('editCarSelect').value,
-            type: document.getElementById('editTypeSelect').value,
-            amount: parseFloat(document.getElementById('editAmountInput').value),
-            description: document.getElementById('editDescInput').value,
-            mileage: document.getElementById('editMileageInput').value ? parseInt(document.getElementById('editMileageInput').value) : null,
-            date: new Date(document.getElementById('editDateInput').value).toISOString()
-        };
-        await expensesRef.child(currentEditId).update(updates);
-        closeEditModal();
-    };
-
-    window.deleteExpense = async function(id) {
-        if (confirm('Удалить операцию?')) {
-            await expensesRef.child(id).remove();
-        }
-    };
-
-    window.deleteCurrentExpense = function() {
-        if (currentEditId) {
-            deleteExpense(currentEditId);
-            closeEditModal();
-        }
-    };
-
-    // Раскрытие списка
-    window.toggleFullList = function() {
-        isFullListVisible = !isFullListVisible;
-        const btn = document.getElementById('expandBtn');
-        const fullList = document.getElementById('operationsFull');
-        
-        if (isFullListVisible) {
-            btn.classList.add('expanded');
-            btn.querySelector('span:first-child').textContent = 'Скрыть';
-            fullList.classList.add('show');
-        } else {
-            btn.classList.remove('expanded');
-            btn.querySelector('span:first-child').textContent = 'Показать все';
-            fullList.classList.remove('show');
-        }
-    };
-
-    // Форматирование
-    function formatCurrency(amount) {
-        return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', minimumFractionDigits: 0 }).format(amount || 0);
-    }
-
-    // Загрузка данных
-    function loadData() {
-        carsRef.on('value', (snapshot) => {
-            carsData = snapshot.val() || {};
-            updateUI();
-        });
-
-        expensesRef.on('value', (snapshot) => {
-            expenses = [];
-            snapshot.forEach(child => {
-                const data = child.val();
-                expenses.push({
-                    id: child.key,
-                    car_id: data.car_id,
-                    type: data.type,
-                    amount: data.amount,
-                    description: data.description || '',
-                    mileage: data.mileage,
-                    date: new Date(data.date)
-                });
+        // Обработка кликов по левому меню
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                navItems.forEach(n => n.classList.remove('active'));
+                this.classList.add('active');
+                const page = this.dataset.page;
+                updateDetailPage(page);
             });
-            updateUI();
-        });
-    }
-
-    // Обновление интерфейса
-    function updateUI() {
-        // Подсчет статистики
-        let totals = { priora: 0, rio: 0 };
-        let counts = {
-            priora: { fuel: 0, service: 0, wash: 0, other: 0 },
-            rio: { fuel: 0, service: 0, wash: 0, other: 0 }
-        };
-        
-        expenses.forEach(e => {
-            if (e.car_id === 'priora' || e.car_id === 'rio') {
-                totals[e.car_id] += e.amount;
-                counts[e.car_id][e.type] = (counts[e.car_id][e.type] || 0) + 1;
-            }
         });
 
-        // Формируем HTML
-        const filter = document.getElementById('historyFilter')?.value || 'all';
-        const sortedExpenses = [...expenses].sort((a, b) => b.date - a.date);
-        const filtered = filter === 'all' ? sortedExpenses : sortedExpenses.filter(e => e.car_id === filter);
-        const preview = filtered.slice(0, 2);
-        const totalCount = filtered.length;
-
-        const html = `
-            <div class="cars-list">
-                <!-- Приора -->
-                <div class="car-card ${selectedCar === 'priora' ? 'selected' : ''}" id="carPriora" onclick="selectCar('priora')">
-                    <div class="car-info">
-                        <div class="car-header">
-                            <span class="car-name">Лада Приора</span>
-                            <span class="car-total">${formatCurrency(totals.priora)}</span>
-                        </div>
-                        <div class="plate-container">
-                            <span class="plate-main">${carsData.priora?.plateMain || '—'}</span>
-                            <div class="plate-right">
-                                <span class="plate-region">${carsData.priora?.plateRegion || '—'}</span>
-                                <div class="plate-country">
-                                    <div class="russian-flag">
-                                        <div class="flag-white"></div>
-                                        <div class="flag-blue"></div>
-                                        <div class="flag-red"></div>
-                                    </div>
-                                    <span class="country-code">RUS</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="vin-container">
-                            <span class="vin-label">VIN:</span>
-                            <span class="vin-value">${carsData.priora?.vin || '—'}</span>
-                        </div>
-                        <div class="car-stats">
-                            <span>⛽ Заправок: <span class="stat-number">${counts.priora.fuel}</span></span>
-                            <span>🔧 ТО: <span class="stat-number">${counts.priora.service}</span></span>
-                        </div>
-                    </div>
-                    <div class="car-chart">
-                        <div class="chart-container">
-                            <svg class="chart-svg" viewBox="0 0 40 40">
-                                <circle class="chart-circle-bg" cx="20" cy="20" r="16"></circle>
-                                <circle class="chart-circle fuel" id="prioraChartFuel" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                                <circle class="chart-circle service" id="prioraChartService" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                                <circle class="chart-circle wash" id="prioraChartWash" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                                <circle class="chart-circle other" id="prioraChartOther" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                            </svg>
-                        </div>
-                        <div class="chart-legend">
-                            <div class="legend-item"><span class="legend-color fuel"></span><span class="legend-text">⛽</span></div>
-                            <div class="legend-item"><span class="legend-color service"></span><span class="legend-text">🔧</span></div>
-                            <div class="legend-item"><span class="legend-color wash"></span><span class="legend-text">🧼</span></div>
-                            <div class="legend-item"><span class="legend-color other"></span><span class="legend-text">📦</span></div>
-                        </div>
-                        <button class="chart-edit-btn" onclick="openSTSModalForCar('priora')">✏️ ред.</button>
-                    </div>
-                </div>
-
-                <!-- Rio -->
-                <div class="car-card ${selectedCar === 'rio' ? 'selected' : ''}" id="carRio" onclick="selectCar('rio')">
-                    <div class="car-info">
-                        <div class="car-header">
-                            <span class="car-name">Kia Rio</span>
-                            <span class="car-total">${formatCurrency(totals.rio)}</span>
-                        </div>
-                        <div class="plate-container">
-                            <span class="plate-main">${carsData.rio?.plateMain || '—'}</span>
-                            <div class="plate-right">
-                                <span class="plate-region">${carsData.rio?.plateRegion || '—'}</span>
-                                <div class="plate-country">
-                                    <div class="russian-flag">
-                                        <div class="flag-white"></div>
-                                        <div class="flag-blue"></div>
-                                        <div class="flag-red"></div>
-                                    </div>
-                                    <span class="country-code">RUS</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="vin-container">
-                            <span class="vin-label">VIN:</span>
-                            <span class="vin-value">${carsData.rio?.vin || '—'}</span>
-                        </div>
-                        <div class="car-stats">
-                            <span>⛽ Заправок: <span class="stat-number">${counts.rio.fuel}</span></span>
-                            <span>🔧 ТО: <span class="stat-number">${counts.rio.service}</span></span>
-                        </div>
-                    </div>
-                    <div class="car-chart">
-                        <div class="chart-container">
-                            <svg class="chart-svg" viewBox="0 0 40 40">
-                                <circle class="chart-circle-bg" cx="20" cy="20" r="16"></circle>
-                                <circle class="chart-circle fuel" id="rioChartFuel" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                                <circle class="chart-circle service" id="rioChartService" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                                <circle class="chart-circle wash" id="rioChartWash" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                                <circle class="chart-circle other" id="rioChartOther" cx="20" cy="20" r="16" stroke-dasharray="0 100"></circle>
-                            </svg>
-                        </div>
-                        <div class="chart-legend">
-                            <div class="legend-item"><span class="legend-color fuel"></span><span class="legend-text">⛽</span></div>
-                            <div class="legend-item"><span class="legend-color service"></span><span class="legend-text">🔧</span></div>
-                            <div class="legend-item"><span class="legend-color wash"></span><span class="legend-text">🧼</span></div>
-                            <div class="legend-item"><span class="legend-color other"></span><span class="legend-text">📦</span></div>
-                        </div>
-                        <button class="chart-edit-btn" onclick="openSTSModalForCar('rio')">✏️ ред.</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Форма новой операции -->
-            <div class="form-section">
-                <h3>➕ Новая операция <span id="activeCarBadge" class="active-car-badge">${selectedCar === 'priora' ? 'Лада Приора' : 'Kia Rio'}</span></h3>
-                <div class="form-row">
-                    <label>Тип</label>
-                    <select id="expenseType">
-                        <option value="fuel">⛽ Заправка</option>
-                        <option value="service">🔧 ТО</option>
-                        <option value="wash">🧼 Мойка</option>
-                        <option value="other">📦 Прочее</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <label>Дата</label>
-                    <input type="date" id="expenseDate" value="${new Date().toISOString().split('T')[0]}">
-                </div>
-                <div class="form-row">
-                    <label>Сумма</label>
-                    <input type="number" id="expenseAmount" placeholder="0">
-                </div>
-                <div class="form-row">
-                    <label>Описание</label>
-                    <textarea id="expenseDesc" placeholder="Детали..." rows="2"></textarea>
-                </div>
-                <div class="form-row">
-                    <label>Пробег</label>
-                    <input type="number" id="expenseMileage" placeholder="0">
-                </div>
-                <div class="button-group">
-                    <button class="primary" id="addExpenseBtn">➕ Добавить</button>
-                    <button id="resetFormBtn">🔄 Очистить</button>
-                </div>
-            </div>
-
-            <!-- Список операций -->
-            <div class="operations-section">
-                <div class="section-header">
-                    <h3>📋 Операции <span class="stats-badge">${totalCount}</span></h3>
-                </div>
-                
-                <select id="historyFilter" class="filter-select">
-                    <option value="all" ${filter === 'all' ? 'selected' : ''}>Все автомобили</option>
-                    <option value="priora" ${filter === 'priora' ? 'selected' : ''}>Лада Приора</option>
-                    <option value="rio" ${filter === 'rio' ? 'selected' : ''}>Kia Rio</option>
-                </select>
-                
-                <div class="operations-list">
-                    <div id="operationsPreview">
-                        ${preview.map(e => `
-                            <div class="operation-item">
-                                <div class="operation-main">
-                                    <div class="operation-icon">${e.type === 'fuel' ? '⛽' : e.type === 'service' ? '🔧' : e.type === 'wash' ? '🧼' : '📦'}</div>
-                                    <div class="operation-details">
-                                        <div class="operation-date">${e.date.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'})}</div>
-                                        <div class="operation-desc">${e.description || 'Без описания'}</div>
-                                    </div>
-                                </div>
-                                <div class="operation-right">
-                                    <div class="operation-amount">${formatCurrency(e.amount)}</div>
-                                    <div class="operation-car">${e.car_id === 'priora' ? 'Приора' : 'Rio'}</div>
-                                    <div class="action-buttons">
-                                        <button class="action-btn edit" onclick="openEditModal('${e.id}')">✏️</button>
-                                        <button class="action-btn delete" onclick="deleteExpense('${e.id}')">🗑</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('')}
-                        ${preview.length === 0 ? '<div class="empty-message">Нет записей</div>' : ''}
-                    </div>
-                    
-                    ${filtered.length > 2 ? `
-                        <button id="expandBtn" class="expand-btn" onclick="toggleFullList()">
-                            <span>Показать все</span>
-                            <span class="arrow">▼</span>
-                        </button>
-                        
-                        <div id="operationsFull" class="operations-full ${isFullListVisible ? 'show' : ''}">
-                            ${filtered.map(e => `
-                                <div class="operation-item">
-                                    <div class="operation-main">
-                                        <div class="operation-icon">${e.type === 'fuel' ? '⛽' : e.type === 'service' ? '🔧' : e.type === 'wash' ? '🧼' : '📦'}</div>
-                                        <div class="operation-details">
-                                            <div class="operation-date">${e.date.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit', year:'2-digit'})}</div>
-                                            <div class="operation-desc">${e.description || 'Без описания'}</div>
-                                        </div>
-                                    </div>
-                                    <div class="operation-right">
-                                        <div class="operation-amount">${formatCurrency(e.amount)}</div>
-                                        <div class="operation-car">${e.car_id === 'priora' ? 'Приора' : 'Rio'}</div>
-                                        <div class="action-buttons">
-                                            <button class="action-btn edit" onclick="openEditModal('${e.id}')">✏️</button>
-                                            <button class="action-btn delete" onclick="deleteExpense('${e.id}')">🗑</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-
-        document.getElementById('content').innerHTML = html;
-        
-        // Обновляем диаграммы
-        updateChart('priora', counts.priora);
-        updateChart('rio', counts.rio);
-
-        // Добавляем обработчики событий
-        document.getElementById('addExpenseBtn')?.addEventListener('click', addExpense);
-        document.getElementById('resetFormBtn')?.addEventListener('click', resetForm);
-        document.getElementById('historyFilter')?.addEventListener('change', function() {
-            isFullListVisible = false;
-            updateUI();
-        });
-    }
-
-    // Добавление операции
-    async function addExpense() {
-        const type = document.getElementById('expenseType').value;
-        const date = document.getElementById('expenseDate').value;
-        const amount = document.getElementById('expenseAmount').value;
-        const desc = document.getElementById('expenseDesc').value;
-        const mileage = document.getElementById('expenseMileage').value;
-
-        if (!amount || amount <= 0) {
-            alert('Введите сумму');
-            return;
+        // радио-фильтр (имитация)
+        const radios = document.querySelectorAll('input[name="matchType"]');
+        if (radios.length) {
+            radios.forEach(r => r.addEventListener('change', function() {
+                let val = document.querySelector('input[name="matchType"]:checked').value;
+                alert(`Фильтр изменён: ${val === 'all' ? 'Все матчи' : (val==='home'?'Дома':'В гостях')} (демо-режим)`);
+            }));
         }
 
-        await expensesRef.push({
-            car_id: selectedCar,
-            type: type,
-            amount: parseFloat(amount),
-            description: desc,
-            mileage: mileage ? parseInt(mileage) : null,
-            date: new Date(date).toISOString(),
-            timestamp: Date.now()
-        });
-
-        document.getElementById('expenseAmount').value = '';
-        document.getElementById('expenseDesc').value = '';
-        document.getElementById('expenseMileage').value = '';
-    }
-
-    function resetForm() {
-        document.getElementById('expenseType').value = 'fuel';
-        document.getElementById('expenseDate').value = new Date().toISOString().split('T')[0];
-        document.getElementById('expenseAmount').value = '';
-        document.getElementById('expenseDesc').value = '';
-        document.getElementById('expenseMileage').value = '';
-    }
-
-    // Запуск
-    document.addEventListener('DOMContentLoaded', loadData);
+        // Инициализация: таблица и стартовая страница
+        renderTable();
+        updateDetailPage('table');
+    })();
 </script>
 </body>
 </html>
